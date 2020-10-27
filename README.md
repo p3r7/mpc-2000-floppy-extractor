@@ -14,4 +14,4 @@ As a result, `mtools` and `mount` are unable to get retrieve the long file names
 
 ## Implementation details
 
-This script uses the excellent [kaitai](https://kaitai.io/) binary parser to extract the fylesystem metadata (file names and position in binary) and then uses native python file operation to extract each file.
+This script uses the excellent [kaitai](https://kaitai.io/) binary parser to extract the fylesystem metadata (file names and position in binary image) and then uses native python file operation to extract each file.
