@@ -15,7 +15,7 @@ out_folder= "/tmp/out_mpc_floppy/"
 
 
 ## ------------------------------------------------------------------------
-## PARSE FILES
+## PARSE FLOPPY IMAGE
 
 data = Vfat.from_file(img_file)
 
@@ -63,7 +63,7 @@ for r in data.root_dir.records:
 
 
 ## ------------------------------------------------------------------------
-## EXTRACT
+## EXTRACT FILES
 
 with open(img_file, 'rb') as f:
     for props in parsed_files:
