@@ -8,13 +8,6 @@ from kaitaistruct import KaitaiStruct, KaitaiStream, BytesIO
 from vfat import Vfat
 
 
-# ## ------------------------------------------------------------------------
-# ## CONF
-
-# img_file = "/home/me/Documents/floppy_1.img"
-# out_folder= "/tmp/out_mpc_floppy/"
-
-
 # ---------------------------------------------------------------
 ## ARGS
 
