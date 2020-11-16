@@ -21,6 +21,7 @@ from vfat import Vfat
 parser = argparse.ArgumentParser()
 parser.add_argument("--src", help="path to disk image file", required=True)
 parser.add_argument("--dest", help="folder to write to", required=True)
+parser.add_argument("-v", "--verbose",  action = "store_true")
 args = parser.parse_args()
 
 
@@ -53,9 +54,10 @@ for r in data.root_dir.records:
     lfn_part = r.reserved[:-2].decode(u"ASCII").rstrip()
     lfn = sfn_no_ext + lfn_part + "." + ext
 
-    print("- " + lfn)
-    print("  start cluster:" + str(r.start_clus))
-    print("  size:" + str(r.file_size))
+    if args.verbose:
+        print("- " + lfn)
+        print("  start cluster:" + str(r.start_clus))
+        print("  size:" + str(r.file_size))
 
     if start_clus_offset is None:
         start_bytes = data_start_clus * clus_size
@@ -63,7 +65,8 @@ for r in data.root_dir.records:
     else:
         start_bytes = (data_start_clus - start_clus_offset + r.start_clus) * clus_size
 
-    print("  start pos in img: " + str(start_bytes))
+    if args.verbose:
+        print("  start pos in img: " + str(start_bytes))
 
     parsed_files.append({
         'name': lfn,
