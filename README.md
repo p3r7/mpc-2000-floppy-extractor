@@ -33,7 +33,7 @@ From physically mounted USB drive:
 
     $ sudo python main.py --src=/dev/sdb --floppy 1 --dest=/tmp/out_mpc_floppy/ -v
 
-Extract files from a virtual floppy of an image dump of a Gotek-formated USB drive:
+From a virtual floppy of an image dump of a Gotek-formated USB drive:
 
     $ python main.py --src=/home/me/Documents/gotek_all.img --floppy 1 --dest=/tmp/out_mpc_floppy/ -v
 
