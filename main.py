@@ -128,7 +128,5 @@ with open(args.src, 'rb') as f:
         file_bytes = f.read(props['size'])
         with open(args.dest + props['name'], "wb") as out_f:
             out_f.write(file_bytes)
-            out_f.close()
-    f.close()
 
 print("Extraction complete!")
