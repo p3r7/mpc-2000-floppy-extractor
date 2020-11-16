@@ -1,23 +1,33 @@
 #!/usr/bin/env python3
 
-import kaitaistruct
-from kaitaistruct import KaitaiStruct, KaitaiStream, BytesIO
-
-from vfat import Vfat
+import argparse
 from pprint import pprint
 
+import kaitaistruct
+from kaitaistruct import KaitaiStruct, KaitaiStream, BytesIO
+from vfat import Vfat
 
-## ------------------------------------------------------------------------
-## CONF
 
-img_file = "/home/me/Documents/floppy_1.img"
-out_folder= "/tmp/out_mpc_floppy/"
+# ## ------------------------------------------------------------------------
+# ## CONF
+
+# img_file = "/home/me/Documents/floppy_1.img"
+# out_folder= "/tmp/out_mpc_floppy/"
+
+
+# ---------------------------------------------------------------
+# ARGS
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--src", help="path to disk image file", required=True)
+parser.add_argument("--dest", help="folder to write to", required=True)
+args = parser.parse_args()
 
 
 ## ------------------------------------------------------------------------
 ## PARSE FLOPPY IMAGE
 
-data = Vfat.from_file(img_file)
+data = Vfat.from_file(args.src)
 
 # those might always the same for FAT12 but whatever...
 bytes_per_ls = data.boot_sector.bpb.bytes_per_ls
@@ -39,7 +49,7 @@ for r in data.root_dir.records:
     sfn_no_ext = r.file_name[:-3].decode(u"ASCII")
     ext = r.file_name[-3:].decode(u"ASCII")
 
-    # NB: MPC implementation od LFN uses reserved bytes of a record instead of separate record
+    # NB: MPC implementation of LFN uses reserved bytes of a record instead of separate record
     lfn_part = r.reserved[:-2].decode(u"ASCII").rstrip()
     lfn = sfn_no_ext + lfn_part + "." + ext
 
@@ -65,11 +75,11 @@ for r in data.root_dir.records:
 ## ------------------------------------------------------------------------
 ## EXTRACT FILES
 
-with open(img_file, 'rb') as f:
+with open(args.src, 'rb') as f:
     for props in parsed_files:
         f.seek(props['start'], 0)
         file_bytes = f.read(props['size'])
-        with open(out_folder + props['name'], "wb") as out_f:
+        with open(args.dest + props['name'], "wb") as out_f:
             out_f.write(file_bytes)
             out_f.close()
     f.close()
