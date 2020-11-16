@@ -83,7 +83,7 @@ def get_floppy_file_list(floppy_bytes, vfloppy_offest=0):
         if r.file_size == 0: # empty file
             continue
 
-        if r.file_size > (floppy_size): # crapy file entry
+        if r.file_size > floppy_size: # crapy file entry
             continue
 
         sfn_no_ext = bytes_to_ascii(r.file_name[:-3]).rstrip()
@@ -95,8 +95,8 @@ def get_floppy_file_list(floppy_bytes, vfloppy_offest=0):
 
         if args.verbose:
             print("- " + lfn)
-            print("  start cluster:    #" + str(r.start_clus))
-            print("  size:             " + str(r.file_size))
+            print("  start cluster:       #" + str(r.start_clus))
+            print("  size:                " + str(r.file_size))
 
         if start_clus_offset is None:
             start_bytes = data_start_clus * clus_size
@@ -105,7 +105,9 @@ def get_floppy_file_list(floppy_bytes, vfloppy_offest=0):
             start_bytes = (data_start_clus - start_clus_offset + r.start_clus) * clus_size
 
         if args.verbose:
-            print("  start pos in img: " + str(start_bytes))
+            print("  start pos in floppy: " + str(start_bytes))
+            if vfloppy_offest:
+                print("  start pos in img:    " + str(vfloppy_offest + start_bytes))
 
         parsed_files.append({
             'name': lfn,
