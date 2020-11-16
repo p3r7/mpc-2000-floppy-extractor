@@ -46,7 +46,7 @@ def bytes_to_ascii(byte_arr):
 ## ------------------------------------------------------------------------
 ## FUNCTIONS: FIELD PARSING
 
-def parse_lfn(reserved):
+def parse_lfn_ext(reserved):
     if reserved[0] == 0x00:
         return ''
     else:
@@ -96,7 +96,7 @@ for r in data.root_dir.records:
     ext = r.file_name[-3:].decode(u"ASCII")
 
     # NB: MPC implementation of LFN uses reserved bytes of a record instead of separate record
-    lfn_part = parse_lfn(r.reserved)
+    lfn_part = parse_lfn_ext(r.reserved)
     lfn = sfn_no_ext + lfn_part + "." + ext
 
     if args.verbose:
