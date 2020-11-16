@@ -10,6 +10,11 @@ from vfat import Vfat
 
 
 # ---------------------------------------------------------------
+## CONSTANTS
+
+floppy_size = 1536 * 1024 # REVIEW: 1536 or 1440?
+
+# ---------------------------------------------------------------
 ## ARGS
 
 parser = argparse.ArgumentParser("Extract Akai MPC 2000 floppy files")
@@ -24,7 +29,7 @@ if args.src.startswith("~/"):
 if args.dest.startswith("~/"):
     args.dest = os.path.expanduser(args.dest)
 
-if args.src.startswith("/dev/db") and not args.floppy:
+if args.src.startswith("/dev/sd") and (not args.floppy or args.floppy == "0"):
     parser.error("When targeting a Gotek-formated USB drive, please precise `--floppy`, i.e. which virtual floppy to extract.")
 
 
@@ -53,80 +58,94 @@ def parse_lfn_ext(reserved):
 
 
 ## ------------------------------------------------------------------------
+## FUNCTIONS: FLOPPY PARSING
+
+def get_floppy_file_list(floppy_bytes, vfloppy_offest=0):
+    data = Vfat.from_bytes(floppy_bytes)
+
+    # those might always the same for FAT12 but whatever...
+    bytes_per_ls = data.boot_sector.bpb.bytes_per_ls
+    ls_per_clus = data.boot_sector.bpb.ls_per_clus
+    clus_size = bytes_per_ls * ls_per_clus
+
+    data_start_clus = 33
+    # cf https://www.eit.lth.se/fileadmin/eit/courses/eitn50/Literature/fat12_description.pdf
+
+    start_clus_offset = None
+    parsed_files = []
+
+    for r in data.root_dir.records:
+        # NB: the records index is at 0x2600
+
+        if r.attribute == 0: # not an actual file
+            continue
+
+        if r.file_size == 0: # empty file
+            continue
+
+        if r.file_size > (floppy_size): # crapy file entry
+            continue
+
+        sfn_no_ext = bytes_to_ascii(r.file_name[:-3]).rstrip()
+        ext = r.file_name[-3:].decode(u"ASCII")
+
+        # NB: MPC implementation of LFN uses reserved bytes of a record instead of separate record
+        lfn_part = parse_lfn_ext(r.reserved)
+        lfn = sfn_no_ext + lfn_part + "." + ext
+
+        if args.verbose:
+            print("- " + lfn)
+            print("  start cluster:    #" + str(r.start_clus))
+            print("  size:             " + str(r.file_size))
+
+        if start_clus_offset is None:
+            start_bytes = data_start_clus * clus_size
+            start_clus_offset = r.start_clus
+        else:
+            start_bytes = (data_start_clus - start_clus_offset + r.start_clus) * clus_size
+
+        if args.verbose:
+            print("  start pos in img: " + str(start_bytes))
+
+        parsed_files.append({
+            'name': lfn,
+            'start': vfloppy_offest + start_bytes,
+            'size': r.file_size,
+        })
+
+    return parsed_files
+
+
+def extract_parsed_files(parsed_files):
+    with open(args.src, 'rb') as f:
+        for props in parsed_files:
+            f.seek(props['start'], 0)
+            file_bytes = f.read(props['size'])
+            with open(args.dest + props['name'], "wb") as out_f:
+                out_f.write(file_bytes)
+
+
+## ------------------------------------------------------------------------
 ## PARSE FLOPPY IMAGE
 
+vfloppy_offset = 0
 file_bytes = None
+f = open(args.src, 'rb')
+
 if args.floppy:
-    offset_bytes = int(args.floppy) * 1536 * 1024
-    f = open(args.src, 'rb')
-    f.seek(offset_bytes, 0)
-    file_bytes = f.read(1536 * 1024) # REVIEW: 1536 or 1440?
-    f.close()
+    vfloppy_offset = int(args.floppy) * 1536 * 1024
+    f.seek(vfloppy_offset, 0)
 
-if file_bytes is not None:
-    data = Vfat.from_bytes(file_bytes)
-else:
-    data = Vfat.from_file(args.src)
+file_bytes = f.read(floppy_size)
+f.close()
 
-# those might always the same for FAT12 but whatever...
-bytes_per_ls = data.boot_sector.bpb.bytes_per_ls
-ls_per_clus = data.boot_sector.bpb.ls_per_clus
-clus_size = bytes_per_ls * ls_per_clus
 
-data_start_clus = 33
-# cf https://www.eit.lth.se/fileadmin/eit/courses/eitn50/Literature/fat12_description.pdf
-
-start_clus_offset = None
-parsed_files = []
-
-for r in data.root_dir.records:
-    # NB: the records index is at 0x2600
-
-    if r.attribute == 0: # not an actual file
-        continue
-
-    if r.file_size == 0: # empty file
-        continue
-
-    if r.file_size > (1440 * 1024): # crapy file entry
-        continue
-
-    sfn_no_ext = bytes_to_ascii(r.file_name[:-3]).rstrip()
-    ext = r.file_name[-3:].decode(u"ASCII")
-
-    # NB: MPC implementation of LFN uses reserved bytes of a record instead of separate record
-    lfn_part = parse_lfn_ext(r.reserved)
-    lfn = sfn_no_ext + lfn_part + "." + ext
-
-    if args.verbose:
-        print("- " + lfn)
-        print("  start cluster:    #" + str(r.start_clus))
-        print("  size:             " + str(r.file_size))
-
-    if start_clus_offset is None:
-        start_bytes = data_start_clus * clus_size
-        start_clus_offset = r.start_clus
-    else:
-        start_bytes = (data_start_clus - start_clus_offset + r.start_clus) * clus_size
-
-    if args.verbose:
-        print("  start pos in img: " + str(start_bytes))
-
-    parsed_files.append({
-        'name': lfn,
-        'start': start_bytes,
-        'size': r.file_size,
-    })
+parsed_files = get_floppy_file_list(file_bytes, vfloppy_offset)
 
 
 ## ------------------------------------------------------------------------
 ## EXTRACT FILES
 
-with open(args.src, 'rb') as f:
-    for props in parsed_files:
-        f.seek(props['start'], 0)
-        file_bytes = f.read(props['size'])
-        with open(args.dest + props['name'], "wb") as out_f:
-            out_f.write(file_bytes)
+extract_parsed_files(parsed_files)
 
 print("Extraction complete!")
