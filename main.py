@@ -58,7 +58,7 @@ for r in data.root_dir.records:
     parsed_files.append({
         'name': lfn,
         'start': start_bytes,
-        'size': size,
+        'size': r.file_size,
     })
 
 
