@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import argparse
 from pprint import pprint
 
@@ -17,6 +18,11 @@ parser.add_argument("--floppy", help="virtual floppy id", required=False)
 parser.add_argument("--dest", help="folder to write to", required=True)
 parser.add_argument("-v", "--verbose",  action = "store_true")
 args = parser.parse_args()
+
+if args.src.startswith("~/"):
+    args.src = os.path.expanduser(args.src)
+if args.dest.startswith("~/"):
+    args.dest = os.path.expanduser(args.dest)
 
 if args.src.startswith("/dev/db") and not args.floppy:
     parser.error("When targeting a Gotek-formated USB drive, please precise `--floppy`, i.e. which virtual floppy to extract.")
