@@ -14,6 +14,28 @@ As a result, `mtools` and `mount` are unable to get retrieve the long file names
 
 ## Usage
 
+#### List files on Floppy
+
+From a physically mounted floppy:
+
+    $ sudo python main.py --src=/dev/fd0
+
+From a floppy image file:
+
+    $ python main.py --src=~/Documents/floppy_1.img
+
+
+#### List files on Virtual Floppies
+
+Floppies 1, 7 and 13:
+
+    $ sudo python main.py --src=/dev/sdb --floppy 1,7,13
+
+Floppies 1 to 99:
+
+    $ sudo python main.py --src=/dev/sdb --floppy 1-99
+
+
 #### Extract Single Floppy
 
 From a physically mounted floppy:
@@ -25,20 +47,28 @@ From a floppy image file:
     $ python main.py --src=~/Documents/floppy_1.img --dest=/tmp/out_mpc_floppy/ -v
 
 
-#### Extract Virtual Floppy on USB Drive
+#### Extract Virtual Floppies
 
 Those apply to USB drives Gotek-formated.
 
-From physically mounted USB drive:
+Floppy #1 from physically mounted USB drive:
 
     $ sudo python main.py --src=/dev/sdb --floppy 1 --dest=/tmp/out_mpc_floppy/ -v
 
-From a virtual floppy of an image dump of a Gotek-formated USB drive:
+Floppy #1 from a virtual floppy of an image dump of a Gotek-formated USB drive:
 
     $ python main.py --src=~/Documents/gotek_all.img --floppy 1 --dest=/tmp/out_mpc_floppy/ -v
 
+Floppies #1, #7 and #13:
 
-#### Make Image File of USB Drive / Floppy
+    $ sudo python main.py --src=/dev/sdb --floppy 1,7,13 --dest=/tmp/out_mpc_floppy/ -v
+
+Floppies #10 to #20:
+
+    $ sudo python main.py --src=/dev/sdb --floppy 10-20 --dest=/tmp/out_mpc_floppy/ -v
+
+
+#### Bonus: Make Image File of USB Drive / Floppy
 
 Floppy:
 
