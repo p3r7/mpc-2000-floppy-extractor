@@ -30,6 +30,9 @@ if args.src.startswith("~/"):
 if args.dest and args.dest.startswith("~/"):
     args.dest = os.path.expanduser(args.dest)
 
+if not args.dest:
+    args.verbose = True
+
 floppy_list = []
 if args.floppy:
     floppy_ranges = args.floppy.split(',')
