@@ -49,9 +49,6 @@ if args.src.startswith("/dev/sd"):
     if not floppy_list:
         parser.error("When targeting a Gotek-formated USB drive, please precise `--floppy`, i.e. which virtual floppy to extract.")
 
-if floppy_list and floppy_list[0] == 0:
-    parser.error("Extracting floppy #0 is not supported.")
-
 
 ## ------------------------------------------------------------------------
 ## FUNCTIONS: GENERIC
