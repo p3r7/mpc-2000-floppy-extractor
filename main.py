@@ -20,7 +20,7 @@ floppy_size = 1536 * 1024 # REVIEW: 1536 or 1440?
 
 parser = argparse.ArgumentParser("Extract Akai MPC 2000 floppy files")
 parser.add_argument("--src", help="path to disk image file or device (/dev/sd?)", required=True)
-parser.add_argument("--floppy", help="virtual floppy id", required=False)
+parser.add_argument("--floppy", help="virtual floppy id(s), list and ranges supported", required=False)
 parser.add_argument("--dest", help="folder to write to", required=False)
 parser.add_argument("-v", "--verbose",  action = "store_true")
 args = parser.parse_args()
