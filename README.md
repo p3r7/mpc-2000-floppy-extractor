@@ -27,11 +27,11 @@ From a floppy image file:
 
 #### List files on Virtual Floppies
 
-Floppies 1, 7 and 13:
+Floppies #1, #7 and #13:
 
     $ sudo python main.py --src=/dev/sdb --floppy 1,7,13
 
-Floppies 1 to 99:
+Floppies #1 to #99:
 
     $ sudo python main.py --src=/dev/sdb --floppy 1-99
 
