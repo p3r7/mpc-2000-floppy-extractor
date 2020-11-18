@@ -216,7 +216,8 @@ if not args.dest:
 
 if floppy_list:
     for f, files in parsed_files.items():
-        extract_parsed_files(files, f)
+        if files:
+            extract_parsed_files(files, f)
 else:
     extract_parsed_files(parsed_files)
 
