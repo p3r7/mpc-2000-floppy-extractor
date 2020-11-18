@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+import shutil
 import argparse
 from pprint import pprint
 
@@ -177,12 +178,16 @@ def extract_parsed_files(parsed_files, floppy_id=None):
     if floppy_id:
         dest_dir = args.dest.rstrip("/") + "/" + str(floppy_id) + "/"
         Path(dest_dir).mkdir(parents=True, exist_ok=True)
+        if sudo_user:
+            shutil.chown(dest_dir, sudo_user, sudo_user)
     with open(args.src, 'rb') as f:
         for props in parsed_files:
             f.seek(props['start'], 0)
             file_bytes = f.read(props['size'])
             with open(dest_dir + props['name'], "wb") as out_f:
                 out_f.write(file_bytes)
+            if sudo_user:
+                shutil.chown(dest_dir + props['name'], sudo_user, sudo_user)
 
 
 ## ------------------------------------------------------------------------
