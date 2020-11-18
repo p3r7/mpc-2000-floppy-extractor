@@ -25,9 +25,15 @@ parser.add_argument("--dest", help="folder to write to", required=False)
 parser.add_argument("-v", "--verbose",  action = "store_true")
 args = parser.parse_args()
 
+sudo_user = ''
+if 'SUDO_USER' in os.environ:
+    sudo_user = os.environ["SUDO_USER"]
+
 if args.src.startswith("~/"):
+    args.src = args.src.replace("~/", "~"+sudo_user+"/")
     args.src = os.path.expanduser(args.src)
 if args.dest and args.dest.startswith("~/"):
+    args.dest = args.dest.replace("~/", "~"+sudo_user+"/")
     args.dest = os.path.expanduser(args.dest)
 
 if not args.dest:
