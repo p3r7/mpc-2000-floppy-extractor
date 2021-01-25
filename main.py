@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import shutil
 import argparse
+import json
 from pprint import pprint
 
 import kaitaistruct
@@ -23,6 +24,7 @@ parser = argparse.ArgumentParser("Extract Akai MPC 2000 floppy files")
 parser.add_argument("--src", help="path to disk image file or device (/dev/sd?)", required=True)
 parser.add_argument("--floppy", help="virtual floppy id(s), list and ranges supported", required=False)
 parser.add_argument("--dest", help="folder to write to", required=False)
+parser.add_argument("--out-format", help="output format for listing files", choices=['txt', 'json'], required=False)
 parser.add_argument("-v", "--verbose",  action = "store_true")
 args = parser.parse_args()
 
@@ -39,6 +41,12 @@ if args.dest and args.dest.startswith("~/"):
 
 if not args.dest:
     args.verbose = True
+
+if not args.out_format:
+    # NB: default option doesn't seem to work / choices
+    args.out_format = 'txt'
+
+# print(args.out_format)
 
 floppy_list = []
 if args.floppy:
@@ -113,6 +121,11 @@ def get_floppy_file_list(floppy_bytes, vfloppy_offest=0):
     start_clus_offset = None
     parsed_files = []
 
+    if data.boot_sector.is_fat32:
+        floppy_name = data.boot_sector.ebpb_fat32.partition_volume_label
+    else:
+        floppy_name = data.boot_sector.ebpb_fat16.partition_volume_label
+
     current_vfat_lfn = ""
     for r in data.root_dir.records:
         # NB: the records index is at 0x2600
@@ -143,7 +156,7 @@ def get_floppy_file_list(floppy_bytes, vfloppy_offest=0):
         else:
             fn = mpc_fn
 
-        if args.verbose:
+        if args.verbose and args.out_format == "txt":
             fn_text = mpc_fn
             if current_vfat_lfn:
                 fn_text += " (" + current_vfat_lfn + ")"
@@ -159,7 +172,7 @@ def get_floppy_file_list(floppy_bytes, vfloppy_offest=0):
 
         current_vfat_lfn = ""
 
-        if args.verbose:
+        if args.verbose and args.out_format == "txt":
             print("  start pos in floppy: " + str(start_bytes))
             if vfloppy_offest:
                 print("  start pos in img:    " + str(vfloppy_offest + start_bytes))
@@ -170,7 +183,7 @@ def get_floppy_file_list(floppy_bytes, vfloppy_offest=0):
             'size': r.file_size,
         })
 
-    return parsed_files
+    return (floppy_name, parsed_files)
 
 
 def extract_parsed_files(parsed_files, floppy_id=None):
@@ -198,29 +211,37 @@ file_bytes = None
 f = open(args.src, 'rb')
 
 if floppy_list:
-    parsed_files = {}
+    parsed_files = []
     for floppy in floppy_list:
-        if args.verbose:
+        if args.verbose and args.out_format == "txt":
             print("-"*35)
             print("FLOPPY #" + str(floppy))
         vfloppy_offset = floppy * 1536 * 1024
         f.seek(vfloppy_offset, 0)
         file_bytes = f.read(floppy_size)
-        parsed_files[floppy] = get_floppy_file_list(file_bytes, vfloppy_offset)
+        (name, files) = get_floppy_file_list(file_bytes, vfloppy_offset)
+        parsed_files.append({
+            'name': name,
+            'files': files,
+        })
 else:
     file_bytes = f.read(floppy_size)
-    parsed_files = get_floppy_file_list(file_bytes, vfloppy_offset)
+    (name, parsed_files) = get_floppy_file_list(file_bytes, vfloppy_offset)
 f.close()
+
 
 
 ## ------------------------------------------------------------------------
 ## EXTRACT FILES
 
 if not args.dest:
+    if args.out_format == "json":
+        print(json.dumps(parsed_files))
     exit(0)
 
 if floppy_list:
-    for f, files in parsed_files.items():
+    for f_id, props in parsed_files.items():
+        files = props['files']
         if files:
             extract_parsed_files(files, f)
 else:
