@@ -1,6 +1,8 @@
 # MPC 2000 floppy extractor
 
-Extract files from an Akai MPC 2000 floppy image.
+Extract files from one or several Akai MPC 2000 (v)floppy images.
+
+For more context, read the [accompanying blog post](https://www.eigenbahn.com/2021/04/11/mpc-2000-floppy-format).
 
 
 ## About
